@@ -3,6 +3,8 @@
 import socket
 import hashlib
 import time
+import signal
+import sys
 
 HOST = "127.0.0.1"  # server address
 PORT = 65432  # listening port
@@ -15,7 +17,14 @@ def compute_hash(data):
     print(f"Hash: {hash_object.hexdigest()}\n")
     return hash_object.hexdigest()
 
+def signal_handler(sig, frame):
+    print("Server shutting down...")
+    sys.exit(0)
+
 def main():
+    # signal handler
+    signal.signal(signal.SIGINT, signal_handler)
+    
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
         s.listen()
