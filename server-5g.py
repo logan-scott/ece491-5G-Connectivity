@@ -29,8 +29,10 @@ def send_data(s, data):
 def receive_data(s):
     # receive first 4 bytes of data as data size of payload
     data_size = struct.unpack(">I", s.recv(4))[0]
-    
+    print(f"[INFO] Data size: {data_size} bytes\n")
+
     # receive payload till received payload size is equal to data_size received
+    print("[INFO] Receiving payload...\n")
     received_payload = b""
     reamining_payload_size = data_size
     while reamining_payload_size != 0:
@@ -40,7 +42,14 @@ def receive_data(s):
     return payload
 
 def main():
-    host = 'localhost'
+    #host = 'localhost'
+    #print(f"[INFO] Server address: {host}")
+    # print server ip address
+    host = socket.gethostname()
+    host_ip = socket.gethostbyname(host)
+    print(f"[INFO] Server IP address: {host_ip}\n")
+    # ask whether to use localhost or ip address
+    host = input("Enter server address: ")
     port = int(input("Enter server port: "))
     #buffer_size = 1024
 
