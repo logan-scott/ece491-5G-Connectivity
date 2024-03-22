@@ -8,7 +8,7 @@ import pickle
 #import cv2
 #import pyshark
 
-DESTINATION = "127.0.0.1"  # server address
+#DESTINATION = "127.0.0.1"  # server address
 #PORT = 7777  # destination port
 
 # random data generator
@@ -43,7 +43,7 @@ def receive_data(s):
 
 def main():
     # get the server address and port
-    #destination = input("Enter the server address: ")
+    destination = input("Enter server address: ")
     port = int(input("Enter server port: "))
     
     # get the size of the data to be generated
@@ -52,7 +52,7 @@ def main():
     
     # set up socket connection
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((DESTINATION, port))
+    s.connect((destination, port))
 
     # send data to server
     send_time = transmit_data(s, data)
@@ -73,7 +73,14 @@ def main():
 
     # print hash and RTT
     print(f"[INFO] Hash: {recv_data.encode()}")
-    print(f"[INFO] RTT: {recv_time - send_time} seconds")
+    print(f"[INFO] RTT: {recv_time - send_time} seconds") # total time including computation
+    print(f"[INFO] Bandwidth: {size_mb / (recv_time - send_time) / 1000000 * 8} Mbps") # incorrect, need to subtract computation time
+    print(f"[INFO] Latency (Uplink & Downlink): {(recv_time - send_time) / 2} seconds\n") # incorrect, need to subtract computation time
+
+    # latency uplink is the time it takes for the data to reach the server
+    # latency downlink is the time it takes for the hash to reach the client
+    # need server to send time of data received, computation time, and time of hash sent
+    # then client can calculate latency uplink and downlink and bandwidth
 
 if __name__ == "__main__":
     main()
