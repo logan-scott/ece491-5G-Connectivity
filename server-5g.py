@@ -9,11 +9,11 @@ import struct
 
 # SHA-256 hash function
 def compute_hash(data):
-    print("[INFO] Computing hash...\n")
+    print("[INFO] Computing hash...")
     hash_object = hashlib.sha256()
     hash_object.update(data)
     hash_result = hash_object.hexdigest()
-    print(f"Hash: {hash_result}\n")
+    print(f"Hash: {hash_result}")
     return hash_result
 
 def send_data(s, data):
@@ -22,14 +22,14 @@ def send_data(s, data):
     
     # send data size THEN payload
     s.sendall(struct.pack(">I", len(serialized_payload)))
-    send_time = time.time()
+    #send_time = time.time()
     s.sendall(serialized_payload)
-    return send_time
+    #return send_time
 
 def receive_data(s):
     # receive first 4 bytes of data as data size of payload
     data_size = struct.unpack(">I", s.recv(4))[0]
-    print(f"[INFO] Data size: {data_size} bytes\n")
+    print(f"[INFO] Data size: {data_size} bytes")
 
     # receive payload till received payload size is equal to data_size received
     print("[INFO] Receiving payload...\n")
@@ -42,33 +42,43 @@ def receive_data(s):
     return payload
 
 def main():
-    #host = 'localhost'
-    #print(f"[INFO] Server address: {host}")
     # print server ip address
     host = socket.gethostname()
     host_ip = socket.gethostbyname(host)
-    print(f"[INFO] Server IP address: {host_ip}\n")
+    print(f"[INFO] Server IP address: {host_ip}")
     # ask whether to use localhost or ip address
     host = input("Enter server address: ")
     port = int(input("Enter server port: "))
-    #buffer_size = 1024
 
     # set up socket connection
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((host, port))
-    print(f"[INFO] Server is running on {host}:{port}")
+    print(f"\n[INFO] Server is running on {host}:{port}\n")
     s.listen()
 
     while True:
         try:
             # Accept incoming connection
             client_socket, client_address = s.accept()
-            print(f"[INFO] Connection established from {client_address}")
+            print(f"\n[INFO] Connection established from {client_address}")
 
-            # receive data from client, compute hash, and send it back
-            send_time = send_data(client_socket, compute_hash(receive_data(client_socket)))
-            print(f"[INFO] Data sent to client at {send_time}\n")
+            # receive data from client
+            server_recv_time = time.time()
+            data = receive_data(client_socket)
+            end_recv_time = time.time()
+            print(f"[INFO] Data received from client at {server_recv_time} till {end_recv_time}")
+
+            # compute hash
+            hash_result = compute_hash(data)
+            computation_time = time.time() - end_recv_time
+            print(f"[INFO] Computation time: {computation_time}\n")
+
+            # send it all back
+            server_reply_time = time.time()
+            #send_time = 
+            send_data(client_socket, (hash_result, server_recv_time, end_recv_time, computation_time, server_reply_time))
+            print(f"[INFO] Data sent to client at {server_reply_time}")
             
         except KeyboardInterrupt:
             print("\n[ABORT] Server shutting down...")

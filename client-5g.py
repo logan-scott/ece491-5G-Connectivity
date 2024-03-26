@@ -32,6 +32,8 @@ def receive_data(s):
     # receive first 4 bytes of data as data size of payload
     data_size = struct.unpack(">I", s.recv(4))[0]
     
+    print(f"[INFO] Receiving payload of size {data_size} bytes...\n")
+
     # receive payload till received payload size is equal to data_size received
     received_payload = b""
     reamining_payload_size = data_size
@@ -55,13 +57,19 @@ def main():
     s.connect((destination, port))
 
     # send data to server
+    print("[INFO] Sending data to server...")
     send_time = transmit_data(s, data)
+    print(f"[INFO] Data sent to server at {send_time}\n")
 
     # receive hash from server
     while True:
         try:
             recv_data = receive_data(s)
-            recv_time = time.time()
+            client_recv_time = time.time()
+            server_recv_time = recv_data[1]
+            end_recv_time = recv_data[2]
+            server_compute_time = recv_data[3]
+            server_reply_time = recv_data[4]
             break
         except KeyboardInterrupt:
             print("\n[ABORT] Client shutting down...")
@@ -71,11 +79,16 @@ def main():
     # close the connection
     s.close()
 
-    # print hash and RTT
-    print(f"[INFO] Hash: {recv_data.encode()}")
-    print(f"[INFO] RTT: {recv_time - send_time} seconds") # total time including computation
-    print(f"[INFO] Bandwidth: {size_mb / (recv_time - send_time) / 1000000 * 8} Mbps") # incorrect, need to subtract computation time
-    print(f"[INFO] Latency (Uplink & Downlink): {(recv_time - send_time) / 2} seconds\n") # incorrect, need to subtract computation time
+    # print hash and all timing information
+    print(f"[INFO] Hash: {recv_data[0].encode()}")
+    print(f"[INFO] RTT: {client_recv_time - send_time} seconds") # total time including computation
+    print(f"[INFO] Computation time: {server_compute_time} seconds")
+    print(f"[INFO] Transmission time: {end_recv_time - send_time} seconds")
+    print(f"[INFO] Bandwidth: {size_mb / (client_recv_time - send_time - server_compute_time) / 1000000 * 8} Mbps")
+    #print(f"[INFO] Latency (Uplink & Downlink): {(client_recv_time - send_time - server_compute_time) / 2} seconds\n")
+    print(f"[INFO] Uplink Latency (Client to Server): {server_recv_time - send_time} seconds")
+    print(f"[INFO] Downlink Latency (Server to Client): {client_recv_time - server_reply_time} seconds")
+
 
     # latency uplink is the time it takes for the data to reach the server
     # latency downlink is the time it takes for the hash to reach the client
