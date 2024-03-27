@@ -5,11 +5,6 @@ import time
 import os
 import struct
 import pickle
-#import cv2
-#import pyshark
-
-#DESTINATION = "127.0.0.1"  # server address
-#PORT = 7777  # destination port
 
 # random data generator
 def generate_data(size_mb):
@@ -23,8 +18,8 @@ def transmit_data(s, data):
     serialized_payload = pickle.dumps(data)
 
     # send data size THEN payload
-    s.sendall(struct.pack(">I", len(serialized_payload)))
     send_time = time.time()
+    s.sendall(struct.pack(">I", len(serialized_payload)))
     s.sendall(serialized_payload)
     return send_time
 
@@ -83,17 +78,10 @@ def main():
     print(f"[INFO] Hash: {recv_data[0].encode()}")
     print(f"[INFO] RTT: {client_recv_time - send_time} seconds") # total time including computation
     print(f"[INFO] Computation time: {server_compute_time} seconds")
-    print(f"[INFO] Transmission time: {end_recv_time - send_time} seconds")
+    print(f"[INFO] Transmission time: {end_recv_time - send_time} seconds") # for client sending random data to server
     print(f"[INFO] Bandwidth: {size_mb / (client_recv_time - send_time - server_compute_time) / 1000000 * 8} Mbps")
-    #print(f"[INFO] Latency (Uplink & Downlink): {(client_recv_time - send_time - server_compute_time) / 2} seconds\n")
-    print(f"[INFO] Uplink Latency (Client to Server): {server_recv_time - send_time} seconds")
+    print(f"[INFO] Uplink Latency (Client to Server): {abs(server_recv_time - send_time)} seconds")
     print(f"[INFO] Downlink Latency (Server to Client): {client_recv_time - server_reply_time} seconds")
-
-
-    # latency uplink is the time it takes for the data to reach the server
-    # latency downlink is the time it takes for the hash to reach the client
-    # need server to send time of data received, computation time, and time of hash sent
-    # then client can calculate latency uplink and downlink and bandwidth
 
 if __name__ == "__main__":
     main()

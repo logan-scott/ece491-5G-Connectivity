@@ -5,7 +5,6 @@ import hashlib
 import time
 import pickle
 import struct
-#import cv2
 
 # SHA-256 hash function
 def compute_hash(data):
@@ -22,9 +21,7 @@ def send_data(s, data):
     
     # send data size THEN payload
     s.sendall(struct.pack(">I", len(serialized_payload)))
-    #send_time = time.time()
     s.sendall(serialized_payload)
-    #return send_time
 
 def receive_data(s):
     # receive first 4 bytes of data as data size of payload
