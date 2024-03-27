@@ -6,6 +6,9 @@ import os
 import struct
 import pickle
 
+size_recv = 0
+client_recv_time = 0
+
 # random data generator
 def generate_data(size_mb):
     print(f"[INFO] Generating {size_mb}MB of data...\n")
@@ -18,7 +21,7 @@ def transmit_data(s, data):
     serialized_payload = pickle.dumps(data)
 
     # send data size THEN payload
-    send_time = time.time()
+    send_time = time.perf_counter()
     s.sendall(struct.pack(">I", len(serialized_payload)))
     s.sendall(serialized_payload)
     return send_time
@@ -26,8 +29,12 @@ def transmit_data(s, data):
 def receive_data(s):
     # receive first 4 bytes of data as data size of payload
     data_size = struct.unpack(">I", s.recv(4))[0]
-    
+    global size_recv
+    size_recv = data_size
     print(f"[INFO] Receiving payload of size {data_size} bytes...\n")
+
+    global client_recv_time
+    client_recv_time = time.perf_counter()
 
     # receive payload till received payload size is equal to data_size received
     received_payload = b""
@@ -60,7 +67,7 @@ def main():
     while True:
         try:
             recv_data = receive_data(s)
-            client_recv_time = time.time()
+            #client_recv_time = time.time()
             server_recv_time = recv_data[1]
             end_recv_time = recv_data[2]
             server_compute_time = recv_data[3]
@@ -79,9 +86,12 @@ def main():
     print(f"[INFO] RTT: {client_recv_time - send_time} seconds") # total time including computation
     print(f"[INFO] Computation time: {server_compute_time} seconds")
     print(f"[INFO] Transmission time: {end_recv_time - send_time} seconds") # for client sending random data to server
-    print(f"[INFO] Bandwidth: {size_mb / (client_recv_time - send_time - server_compute_time) / 1000000 * 8} Mbps")
-    print(f"[INFO] Uplink Latency (Client to Server): {abs(server_recv_time - send_time)} seconds")
-    print(f"[INFO] Downlink Latency (Server to Client): {client_recv_time - server_reply_time} seconds")
+    uplink_latency = server_recv_time - send_time
+    print(f"[INFO] Uplink Latency (Client to Server): {abs(uplink_latency)} seconds")
+    print(f"[INFO] Uplink Bandwidth (Client to Server): {size_mb / abs(uplink_latency) * 8} bits per second")
+    downlink_latency = client_recv_time - server_reply_time
+    print(f"[INFO] Downlink Latency (Server to Client): {downlink_latency} seconds")
+    print(f"[INFO] Downlink Bandwidth (Server to Client): {size_recv / downlink_latency * 8} bits per second")
 
 if __name__ == "__main__":
     main()
