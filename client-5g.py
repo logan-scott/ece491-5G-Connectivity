@@ -6,8 +6,10 @@ import os
 import struct
 import pickle
 
+# global variables for timing information
 size_recv = 0
 client_recv_time = 0
+send_time2 = 0
 
 # random data generator
 def generate_data(size_mb):
@@ -22,19 +24,21 @@ def transmit_data(s, data):
 
     # send data size THEN payload
     send_time = time.perf_counter()
+    global send_time2
+    send_time2 = time.time()
     s.sendall(struct.pack(">I", len(serialized_payload)))
     s.sendall(serialized_payload)
     return send_time
 
 def receive_data(s):
+    global client_recv_time
+    client_recv_time = time.time()
+
     # receive first 4 bytes of data as data size of payload
     data_size = struct.unpack(">I", s.recv(4))[0]
     global size_recv
     size_recv = data_size
     print(f"[INFO] Receiving payload of size {data_size} bytes...\n")
-
-    global client_recv_time
-    client_recv_time = time.perf_counter()
 
     # receive payload till received payload size is equal to data_size received
     received_payload = b""
@@ -83,15 +87,40 @@ def main():
 
     # print hash and all timing information
     print(f"[INFO] Hash: {recv_data[0].encode()}")
-    print(f"[INFO] RTT: {client_recv_time - send_time} seconds") # total time including computation
+    print(f"[INFO] RTT: {client_recv_time - send_time2} seconds") # total time including computation
     print(f"[INFO] Computation time: {server_compute_time} seconds")
-    print(f"[INFO] Transmission time: {end_recv_time - send_time} seconds") # for client sending random data to server
-    uplink_latency = server_recv_time - send_time
+    
+    #print(f"[TEST] end_recv_time: {end_recv_time}")
+    #print(f"[TEST] send_time: {send_time}")
+    #print(f"[INFO] Transmission time: {end_recv_time - send_time} seconds") # for client sending random data to server
+    #print(f"send_time2 = {send_time2}")
+    #print(f"end_recv_time = {end_recv_time}")
+    transmission_time = end_recv_time - send_time2
+    print(f"[INFO] Transmission time: {transmission_time} seconds")
+
+    uplink_latency = server_recv_time - send_time2
+    uplink_bandwidth = size_mb / abs(uplink_latency) * 8
     print(f"[INFO] Uplink Latency (Client to Server): {abs(uplink_latency)} seconds")
-    print(f"[INFO] Uplink Bandwidth (Client to Server): {size_mb / abs(uplink_latency) * 8} bits per second")
+    print(f"[INFO] Uplink Bandwidth (Client to Server): {uplink_bandwidth} bits per second")
+    
     downlink_latency = client_recv_time - server_reply_time
-    print(f"[INFO] Downlink Latency (Server to Client): {downlink_latency} seconds")
-    print(f"[INFO] Downlink Bandwidth (Server to Client): {size_recv / downlink_latency * 8} bits per second")
+    downlink_bandwidth = size_recv / abs(downlink_latency) * 8
+    print(f"client_recv_time = {client_recv_time}")
+    print(f"server_reply_time = {server_reply_time}")
+    print(f"[INFO] Downlink Latency (Server to Client): {abs(downlink_latency)} seconds")
+    print(f"[INFO] Downlink Bandwidth (Server to Client): {downlink_bandwidth} bits per second")
+
+    # print timing information to file for graphing later
+    # need to append the file if it already exists because we are running the client multiple times
+    # write time and date of the test run
+    # close the file after writing
+    f = open("5g-timing.txt", "a")
+    f.write(f"Data for run at {time.strftime('%Y-%m-%d %H:%M:%S')} with {size_mb} MB random data input\n")
+    f.write(f"{transmission_time} {abs(uplink_latency)} {uplink_bandwidth} {abs(downlink_latency)} {downlink_bandwidth}\n")
+    f.close()
+
+    print("[INFO] Timing information saved to 5g-timing.txt")
+
 
 if __name__ == "__main__":
     main()

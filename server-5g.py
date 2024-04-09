@@ -6,7 +6,8 @@ import time
 import pickle
 import struct
 
-server_reply_time = 0
+# global variable for timing information
+#server_reply_time = 0
 
 # SHA-256 hash function
 def compute_hash(data):
@@ -22,8 +23,6 @@ def send_data(s, data):
     serialized_payload = pickle.dumps(data)
     
     # send data size THEN payload
-    global server_reply_time
-    server_reply_time = time.perf_counter()
     s.sendall(struct.pack(">I", len(serialized_payload)))
     s.sendall(serialized_payload)
 
@@ -66,9 +65,12 @@ def main():
 
             # receive data from client
             server_recv_time = time.perf_counter()
+            server_recv_time2 = time.time()
             data = receive_data(client_socket)
             end_recv_time = time.perf_counter()
-            print(f"[INFO] Data received from client at {server_recv_time} till {end_recv_time}")
+            end_recv_time2 = time.time()
+            #print(f"[INFO] Data received from client at {server_recv_time} till {end_recv_time}")
+            print(f"[INFO] Data received from client at {server_recv_time2} till {end_recv_time2}")
 
             # compute hash
             hash_result = compute_hash(data)
@@ -76,8 +78,10 @@ def main():
             print(f"[INFO] Computation time: {computation_time}\n")
 
             # send it all back
-            #server_reply_time = time.perf_counter()
-            #send_time = 
+            end_recv_time = end_recv_time2
+            server_recv_time = server_recv_time2
+            #global server_reply_time
+            server_reply_time = time.time()
             send_data(client_socket, (hash_result, server_recv_time, end_recv_time, computation_time, server_reply_time))
             print(f"[INFO] Data sent to client at {server_reply_time}")
             
