@@ -115,8 +115,8 @@ def main():
     # write time and date of the test run
     # close the file after writing
     f = open("5g-timing.txt", "a")
-    f.write(f"Data for run at {time.strftime('%Y-%m-%d %H:%M:%S')} with {size_mb} MB random data input\n")
-    f.write(f"{transmission_time} {abs(uplink_latency)} {uplink_bandwidth} {abs(downlink_latency)} {downlink_bandwidth}\n")
+    #f.write(f"Data for run at {time.strftime('%Y-%m-%d %H:%M:%S')} with {size_mb} MB random data input\n")
+    f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {size_mb} {transmission_time} {abs(uplink_latency)} {uplink_bandwidth} {abs(downlink_latency)} {downlink_bandwidth}\n")
     f.close()
 
     print("[INFO] Timing information saved to 5g-timing.txt")
