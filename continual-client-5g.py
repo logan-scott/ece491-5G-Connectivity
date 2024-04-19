@@ -54,7 +54,11 @@ def main():
     destination = input("Enter server address: ")
     port = int(input("Enter server port: "))
     
-    while True:
+    iterations = 10 # number of times to run the client
+    for i in range(iterations):
+        print(f"\n[INFO] Iteration {i+1} of {iterations}\n")
+
+        #while True:
         try:
             # set up socket connection
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -62,7 +66,8 @@ def main():
             print(f"\n[INFO] Connected to server at {destination}:{port}\n")
 
             # get the size of the data to be generated
-            size_mb = int(input("\nEnter size of the data to be generated in MB: "))
+            #size_mb = int(input("\nEnter size of the data to be generated in MB: "))
+            size_mb = 4000
             data = generate_data(size_mb)
             
             # send data to server
